@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星火 - 抗日主题游戏</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .game-loading {
+            text-align: center;
+            padding: 50px;
+            color: #ffd700;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- 游戏标题栏 -->
+        <header id="game-header">
+            <h1>星火</h1>
+            <div id="header-info">
+                <span id="current-time">1937年7月</span>
+                <span id="current-chapter">序章：烽火起</span>
+            </div>
+        </header>
+
+        <!-- 游戏主内容区 -->
+        <main id="game-main">
+            <!-- 角色信息面板 -->
+            <section id="character-panel">
+                <div id="character-info">
+                    <div id="character-avatar">
+                        <div class="avatar-placeholder" id="avatar-img">村</div>
+                    </div>
+                    <div id="character-stats">
+                        <h3 id="character-name">王二柱</h3>
+                        <p id="character-identity">普通村民</p>
+                        <div id="status-bars">
+                            <div class="status-bar">
+                                <label>生命值:</label>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="health-bar" style="width: 100%"></div>
+                                </div>
+                                <span id="health-text">100/100</span>
+                            </div>
+                            <div class="status-bar">
+                                <label>士气:</label>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="morale-bar" style="width: 70%"></div>
+                                </div>
+                                <span id="morale-text">70/100</span>
+                            </div>
+                            <div class="status-bar">
+                                <label>疲劳度:</label>
+                                <div class="progress-bar">
+                                    <div class="progress-fill fatigue" id="fatigue-bar" style="width: 0%"></div>
+                                </div>
+                                <span id="fatigue-text">0/100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 资源信息面板 -->
+            <section id="resources-panel">
+                <div class="resource">
+                    <div class="resource-icon food-icon">食</div>
+                    <span class="resource-name">食物</span>
+                    <span class="resource-value" id="food-value">100</span>
+                </div>
+                <div class="resource">
+                    <div class="resource-icon ammo-icon">弹</div>
+                    <span class="resource-name">弹药</span>
+                    <span class="resource-value" id="ammo-value">0</span>
+                </div>
+                <div class="resource">
+                    <div class="resource-icon intel-icon">情</div>
+                    <span class="resource-name">情报</span>
+                    <span class="resource-value" id="intelligence-value">0</span>
+                </div>
+                <div class="resource">
+                    <div class="resource-icon rep-icon">声</div>
+                    <span class="resource-name">声望</span>
+                    <span class="resource-value" id="reputation-value">0</span>
+                </div>
+                <div class="resource">
+                    <div class="resource-icon money-icon">金</div>
+                    <span class="resource-name">金钱</span>
+                    <span class="resource-value" id="money-value">500</span>
+                </div>
+                <div class="resource">
+                    <div class="resource-icon medicine-icon">药</div>
+                    <span class="resource-name">药品</span>
+                    <span class="resource-value" id="medicine-value">0</span>
+                </div>
+            </section>
+
+            <!-- 剧情文本区域 -->
+            <section id="story-panel">
+                <div id="story-text">
+                    <p id="current-text" class="game-loading">正在加载游戏内容...</p>
+                </div>
+            </section>
+
+            <!-- 选择按钮区域 -->
+            <section id="choices-panel">
+                <div id="choices-container">
+                    <!-- 选择按钮将由JavaScript动态生成 -->
+                </div>
+            </section>
+        </main>
+
+        <!-- 游戏底部控制栏 -->
+        <footer id="game-footer">
+            <button id="save-btn">保存游戏</button>
+            <button id="load-btn">加载游戏</button>
+            <button id="settings-btn">设置</button>
+            <button id="log-btn">日志</button>
+            <button id="completion-btn">完成度</button>
+        </footer>
+    </div>
+
+    <!-- 游戏设置弹窗 -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>游戏设置</h2>
+            <div class="setting-item">
+                <label>音效音量:</label>
+                <input type="range" id="sound-volume" min="0" max="100" value="50">
+            </div>
+            <div class="setting-item">
+                <label>背景音乐音量:</label>
+                <input type="range" id="music-volume" min="0" max="100" value="30">
+            </div>
+            <div class="setting-item">
+                <label>文字显示速度:</label>
+                <select id="text-speed">
+                    <option value="slow">慢速</option>
+                    <option value="normal" selected>正常</option>
+                    <option value="fast">快速</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏日志弹窗 -->
+    <div id="log-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>游戏日志</h2>
+            <div id="log-content">
+                <p>1937年7月7日，卢沟桥事变爆发</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏脚本 -->
+    <script src="script.js"></script>
+    <script src="script_expanded.js"></script>
+    
+    <!-- 游戏完整性检查和启动 -->
+    <script>
+        try {
+            console.log('正在初始化游戏...');
+            
+            // 检查函数是否可用
+            console.log('resetGameState:', typeof window.resetGameState);
+            console.log('initGame:', typeof window.initGame);
+            console.log('gameState:', typeof gameState);
+            console.log('storyNodes:', typeof storyNodes);
+            console.log('gameState.currentNode:', gameState.currentNode);
+            
+            // 重置游戏状态
+            window.resetGameState();
+            console.log('重置游戏状态完成');
+            console.log('gameState.currentNode:', gameState.currentNode);
+            
+            // 初始化游戏
+            window.initGame();
+            console.log('初始化游戏完成');
+        } catch (e) {
+            console.error('初始化游戏失败:', e);
+            document.getElementById('current-text').innerHTML = 
+                '<p style="color: red;">游戏初始化失败: ' + e.message + '</p>';
+        }
+    </script>
+    
+    <!-- 备用手动启动按钮 -->
+    <script>
+        // 如果自动启动失败，显示手动启动按钮
+        setTimeout(() => {
+            const choicesContainer = document.getElementById('choices-container');
+            if (!choicesContainer || choicesContainer.children.length === 0) {
+                const textEl = document.getElementById('current-text');
+                if (textEl) {
+                    textEl.innerHTML = '<p style="color: #ffd700;">点击下方按钮开始游戏</p>' +
+                        '<button onclick="window.resetGameState(); window.initGame()" style="margin-top: 20px; padding: 10px 20px; ' +
+                        'background: #8b0000; color: #fff; border: 2px solid #ffd700; ' +
+                        'border-radius: 8px; cursor: pointer; font-size: 1.2em;">开始游戏</button>';
+                }
+            }
+        }, 2000);
+        
+        // 全局点击事件委托（处理选项按钮）
+         document.addEventListener('click', function(event) {
+             if (event.target.classList.contains('choice-btn')) {
+                 console.log('检测到选项按钮点击:', event.target.textContent);
+                 if (typeof window.handleChoice === 'function') {
+                     // 创建模拟事件对象
+                     const mockEvent = {
+                         target: event.target,
+                         preventDefault: function() {},
+                         stopPropagation: function() {}
+                     };
+                     window.handleChoice(mockEvent);
+                 } else {
+                     console.error('handleChoice函数不可用');
+                 }
+             }
+         });
+    </script>
+</body>
+</html>

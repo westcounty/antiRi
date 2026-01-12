@@ -1,0 +1,561 @@
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'SimSun', 'FangSong', serif;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    line-height: 1.6;
+}
+
+/* 游戏容器 */
+#game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #2d2d2d;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 游戏标题栏 */
+#game-header {
+    background-color: #8b0000;
+    color: #fff;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #ffd700;
+}
+
+#game-header h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#header-info {
+    display: flex;
+    gap: 1rem;
+    font-size: 1.1rem;
+}
+
+/* 游戏主内容区 */
+#game-main {
+    flex: 1;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* 角色信息面板 */
+#character-panel {
+    background-color: #3a3a3a;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #555;
+}
+
+#character-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+#character-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #ffd700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#avatar-img {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(135deg, #8b0000, #cd5c5c);
+}
+
+#character-stats {
+    flex: 1;
+}
+
+#character-name {
+    font-size: 1.5rem;
+    color: #ffd700;
+    margin-bottom: 0.25rem;
+}
+
+#character-identity {
+    color: #aaa;
+    margin-bottom: 0.5rem;
+}
+
+#status-bars {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 150px;
+}
+
+.status-bar label {
+    font-size: 0.9rem;
+    min-width: 60px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 15px;
+    background-color: #555;
+    border-radius: 10px;
+    overflow: hidden;
+    min-width: 100px;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #4caf50;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.fatigue {
+    background-color: #f44336;
+}
+
+.status-bar span {
+    font-size: 0.9rem;
+    min-width: 50px;
+    text-align: right;
+}
+
+/* 资源信息面板 */
+#resources-panel {
+    background-color: #3a3a3a;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #555;
+}
+
+#resources-panel {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.resource {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #4a4a4a;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: 1px solid #666;
+    transition: all 0.3s ease;
+}
+
+.resource:hover {
+    background-color: #5a5a5a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.resource-icon {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #fff;
+    border-radius: 4px;
+}
+
+.food-icon { background: #27ae60; }
+.ammo-icon { background: #e74c3c; }
+.intel-icon { background: #3498db; }
+.rep-icon { background: #9b59b6; }
+.money-icon { background: #f39c12; }
+.medicine-icon { background: #e91e63; }
+
+.resource-name {
+    font-size: 0.9rem;
+    min-width: 60px;
+}
+
+.resource-value {
+    font-weight: bold;
+    color: #ffd700;
+    font-size: 1.1rem;
+}
+
+/* 剧情文本区域 */
+#story-panel {
+    background-color: #3a3a3a;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #555;
+    flex: 1;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+}
+
+#story-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    text-align: justify;
+}
+
+#current-text {
+    margin: 0;
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 选择按钮区域 */
+#choices-panel {
+    background-color: #3a3a3a;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #555;
+}
+
+#choices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.choice-btn {
+    background-color: #5a5a5a;
+    color: #e0e0e0;
+    border: 1px solid #777;
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 1rem;
+    font-family: 'SimSun', 'FangSong', serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.choice-btn:hover {
+    background-color: #6a6a6a;
+    border-color: #ffd700;
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.choice-btn:active {
+    transform: translateX(3px);
+}
+
+/* 游戏底部控制栏 */
+#game-footer {
+    background-color: #3a3a3a;
+    padding: 1rem;
+    border-top: 1px solid #555;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+#game-footer button {
+    background-color: #5a5a5a;
+    color: #e0e0e0;
+    border: 1px solid #777;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#game-footer button:hover {
+    background-color: #6a6a6a;
+    border-color: #ffd700;
+}
+
+/* 模态弹窗 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+    background-color: #3a3a3a;
+    margin: 15% auto;
+    padding: 2rem;
+    border: 1px solid #555;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: #fff;
+}
+
+.modal h2 {
+    color: #ffd700;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.setting-item {
+    margin-bottom: 1.5rem;
+}
+
+.setting-item label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.setting-item input[type="range"] {
+    width: 100%;
+    margin: 0.5rem 0;
+}
+
+.setting-item select {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #4a4a4a;
+    color: #e0e0e0;
+    border: 1px solid #666;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+/* 日志内容 */
+#log-content {
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: #4a4a4a;
+    padding: 1rem;
+    border-radius: 5px;
+    border: 1px solid #666;
+}
+
+#log-content p {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #555;
+    font-size: 0.9rem;
+}
+
+#log-content p:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #3a3a3a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    #game-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    #status-bars {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .status-bar {
+        min-width: auto;
+    }
+
+    #resources-panel {
+        gap: 0.5rem;
+    }
+
+    .resource {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    .resource-icon {
+        width: 25px;
+        height: 25px;
+    }
+
+    .resource-name {
+        min-width: 50px;
+        font-size: 0.8rem;
+    }
+
+    #story-text {
+        font-size: 1rem;
+    }
+
+    .choice-btn {
+        font-size: 0.9rem;
+        padding: 0.8rem;
+    }
+
+    #game-footer {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    #game-footer button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* 游戏结束画面 */
+#game-over {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 2rem;
+    color: #fff;
+    text-align: center;
+}
+
+#game-over h2 {
+    font-size: 3rem;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#game-over p {
+    font-size: 1.2rem;
+    max-width: 80%;
+    line-height: 1.8;
+}
+
+#restart-btn {
+    background-color: #8b0000;
+    color: #fff;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #ffd700;
+}
+
+#restart-btn:hover {
+    background-color: #a00000;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* 角色切换动画 */
+.character-transition {
+    animation: characterFade 0.5s ease-in-out;
+}
+
+@keyframes characterFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 章节切换动画 */
+.chapter-transition {
+    animation: chapterSlide 0.8s ease-in-out;
+}
+
+@keyframes chapterSlide {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* 按钮禁用状态 */
+.choice-btn:disabled {
+    background-color: #444;
+    color: #888;
+    border-color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.choice-btn:disabled:hover {
+    background-color: #444;
+    border-color: #666;
+    transform: none;
+    box-shadow: none;
+}
