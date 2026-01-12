@@ -156,7 +156,7 @@ const chapter1Supplementary = {
             {
                 text: "迅速撤离",
                 consequences: { resources: { intelligence: +30, reputation: +45 }, status: { morale: +50, fatigue: +45 } },
-                nextNode: "chapter1撤离"
+                nextNode: "chapter1_retreat"
             },
             {
                 text: "收集战利品",
@@ -824,6 +824,69 @@ function mergeAllStoryNodes() {
     Object.assign(storyNodes, chapter3Supplementary);
     Object.assign(storyNodes, chapter4Supplementary);
     Object.assign(storyNodes, chapter5Supplementary);
+    
+    // 合并其他补丁节点
+    if (typeof missingNodes !== 'undefined') {
+        Object.assign(storyNodes, missingNodes);
+    }
+    if (typeof allMissingNodes !== 'undefined') {
+        Object.assign(storyNodes, allMissingNodes);
+    }
+    if (typeof progressionNodes !== 'undefined') {
+        Object.assign(storyNodes, progressionNodes);
+    }
+    if (typeof enhancedChapterNodes !== 'undefined') {
+        Object.assign(storyNodes, enhancedChapterNodes);
+    }
+    
+    // 修复循环节点
+    fixLoopingNodesInStory();
+}
+
+// 修复指向循环节点的引用
+function fixLoopingNodesInStory() {
+    const chapterProgressMap = {
+        'chapter1_start': 'chapter1_progress',
+        'chapter2_start': 'chapter2_progress',
+        'chapter3_start': 'chapter3_progress',
+        'chapter4_start': 'chapter4_progress',
+        'chapter5_start': 'chapter5_progress'
+    };
+    
+    // 需要保持指向start的节点（过渡节点等）
+    const keepOriginal = [
+        'transition_chapter1', 'transition_chapter2', 'transition_chapter3',
+        'transition_chapter4', 'transition_chapter5', 'transition_chapter6',
+        'start', 'chapter0_join_guerrilla', 'chapter0_join_army',
+        'chapter0_join_cultural', 'chapter0_join_smuggling'
+    ];
+    
+    let fixedCount = 0;
+    
+    for (const nodeId in storyNodes) {
+        // 跳过需要保持原样的节点
+        if (keepOriginal.includes(nodeId)) continue;
+        
+        // 跳过start节点本身
+        if (nodeId.endsWith('_start')) continue;
+        
+        // 跳过进度节点
+        if (nodeId.includes('_progress') || nodeId.includes('_missions') || 
+            nodeId.includes('_battles') || nodeId.includes('_work') || 
+            nodeId.includes('_business') || nodeId.includes('_final')) continue;
+        
+        const node = storyNodes[nodeId];
+        if (!node || !node.choices) continue;
+        
+        for (const choice of node.choices) {
+            if (choice.nextNode && chapterProgressMap[choice.nextNode]) {
+                choice.nextNode = chapterProgressMap[choice.nextNode];
+                fixedCount++;
+            }
+        }
+    }
+    
+    console.log('Fixed looping references:', fixedCount);
 }
 
 // 在游戏初始化时调用

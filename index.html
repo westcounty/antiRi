@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -160,67 +160,103 @@
     <!-- 游戏脚本 -->
     <script src="script.js"></script>
     <script src="script_expanded.js"></script>
+    <script src="script_missing_nodes.js"></script>
+    <script src="script_all_missing.js"></script>
+    <script src="script_progression.js"></script>
+    <script src="script_chapters_enhanced.js"></script>
     
-    <!-- 游戏完整性检查和启动 -->
+    <!-- 游戏启动脚本 -->
     <script>
-        try {
-            console.log('正在初始化游戏...');
-            
-            // 检查函数是否可用
-            console.log('resetGameState:', typeof window.resetGameState);
-            console.log('initGame:', typeof window.initGame);
-            console.log('gameState:', typeof gameState);
-            console.log('storyNodes:', typeof storyNodes);
-            console.log('gameState.currentNode:', gameState.currentNode);
-            
-            // 重置游戏状态
-            window.resetGameState();
-            console.log('重置游戏状态完成');
-            console.log('gameState.currentNode:', gameState.currentNode);
-            
-            // 初始化游戏
-            window.initGame();
-            console.log('初始化游戏完成');
-        } catch (e) {
-            console.error('初始化游戏失败:', e);
+        // 完整的游戏启动函数
+        function startGame() {
+            try {
+                // 1. 清除可能损坏的旧存档
+                localStorage.removeItem('antiR_gameState');
+                
+                // 2. 合并所有故事节点
+                if (typeof mergeAllStoryNodes === 'function') {
+                    mergeAllStoryNodes();
+                }
+                if (typeof window.mergeMissingNodes === 'function') {
+                    window.mergeMissingNodes();
+                }
+                if (typeof window.mergeAllMissingNodes === 'function') {
+                    window.mergeAllMissingNodes();
+                }
+                
+                // 3. 验证start节点存在
+                if (typeof storyNodes === 'undefined' || !storyNodes['start']) {
+                    throw new Error('故事节点未正确加载');
+                }
+                
+                // 4. 重置游戏状态
+                if (typeof window.resetGameState === 'function') {
+                    window.resetGameState();
+                }
+                
+                // 5. 确保currentNode是start
+                gameState.currentNode = 'start';
+                
+                // 6. 绑定事件
+                if (typeof bindEventListeners === 'function') {
+                    bindEventListeners();
+                }
+                
+                // 7. 更新UI
+                if (typeof updateUI === 'function') {
+                    updateUI();
+                }
+                
+                // 8. 显示开始节点
+                if (typeof showCurrentNode === 'function') {
+                    showCurrentNode();
+                }
+                
+                return true;
+            } catch (e) {
+                console.error('启动失败:', e);
+                return false;
+            }
+        }
+        
+        // 尝试自动启动
+        if (!startGame()) {
             document.getElementById('current-text').innerHTML = 
-                '<p style="color: red;">游戏初始化失败: ' + e.message + '</p>';
+                '<p style="color: #ffd700;">点击下方按钮开始游戏</p>';
         }
     </script>
     
     <!-- 备用手动启动按钮 -->
     <script>
-        // 如果自动启动失败，显示手动启动按钮
         setTimeout(() => {
             const choicesContainer = document.getElementById('choices-container');
             if (!choicesContainer || choicesContainer.children.length === 0) {
                 const textEl = document.getElementById('current-text');
-                if (textEl) {
+                if (textEl && !textEl.textContent.includes('1937年')) {
                     textEl.innerHTML = '<p style="color: #ffd700;">点击下方按钮开始游戏</p>' +
-                        '<button onclick="window.resetGameState(); window.initGame()" style="margin-top: 20px; padding: 10px 20px; ' +
+                        '<button id="start-btn" style="margin-top: 20px; padding: 10px 20px; ' +
                         'background: #8b0000; color: #fff; border: 2px solid #ffd700; ' +
                         'border-radius: 8px; cursor: pointer; font-size: 1.2em;">开始游戏</button>';
+                    
+                    document.getElementById('start-btn').onclick = function() {
+                        this.disabled = true;
+                        this.textContent = '加载中...';
+                        setTimeout(() => startGame(), 100);
+                    };
                 }
             }
-        }, 2000);
+        }, 1000);
         
-        // 全局点击事件委托（处理选项按钮）
-         document.addEventListener('click', function(event) {
-             if (event.target.classList.contains('choice-btn')) {
-                 console.log('检测到选项按钮点击:', event.target.textContent);
-                 if (typeof window.handleChoice === 'function') {
-                     // 创建模拟事件对象
-                     const mockEvent = {
-                         target: event.target,
-                         preventDefault: function() {},
-                         stopPropagation: function() {}
-                     };
-                     window.handleChoice(mockEvent);
-                 } else {
-                     console.error('handleChoice函数不可用');
-                 }
-             }
-         });
+        // 全局点击事件委托
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('choice-btn')) {
+                event.preventDefault();
+                if (typeof window.handleChoice === 'function') {
+                    window.handleChoice({ target: event.target });
+                }
+            }
+        });
     </script>
 </body>
 </html>
+

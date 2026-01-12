@@ -1,4 +1,4 @@
-/* 全局样式 */
+﻿/* 全局样式 */
 * {
     margin: 0;
     padding: 0;
@@ -156,9 +156,6 @@ body {
     padding: 1rem;
     border-radius: 8px;
     border: 1px solid #555;
-}
-
-#resources-panel {
     display: flex;
     gap: 1.5rem;
     flex-wrap: wrap;
@@ -559,3 +556,4 @@ body {
     transform: none;
     box-shadow: none;
 }
+

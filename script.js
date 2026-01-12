@@ -1,8 +1,24 @@
+﻿// ==================== GAME CONSTANTS ====================
+const GAME_CONSTANTS = {
+    VICTORY_DATE: 194508,
+    START_DATE: 193707,
+    RANDOM_SUPPORT_CHANCE: 0.2,
+    CHAPTER_SUPPORT_CHANCE: 0.15,
+    MIN_TIME_ADVANCE: 1,
+    MAX_TIME_ADVANCE: 3,
+    DAILY_FOOD_CONSUMPTION: 3,
+    DAILY_FATIGUE_INCREASE: 5,
+    MAX_LOG_ENTRIES: 100,
+    FATIGUE_HIGH_THRESHOLD: 80,
+    FATIGUE_CRITICAL_THRESHOLD: 100
+};
+
 // 游戏状态对象
 const gameState = {
     currentChapter: 0,
     currentCharacter: 0,
     currentNode: "start",
+    previousNode: null,
     time: 193707,
     chapterProgress: 0,
     resources: {
@@ -82,6 +98,38 @@ const chapters = [
     { id: 5, name: "第五章：黎明前夜", timeRange: "1944-1945年", description: "胜利的曙光就在前方，坚持就是胜利" },
     { id: 6, name: "终章：胜利之日", timeRange: "1945年8月", description: "漫长的抗争终于迎来最后的胜利" }
 ];
+
+// 各章节对应的角色信息
+const chapterCharacters = [
+    { id: 0, name: "王二柱", role: "村民", description: "河北完县野场村农民" },
+    { id: 1, name: "王二柱", role: "游击队员", description: "抗日游击队战士" },
+    { id: 2, name: "李明", role: "国军士兵", description: "国民革命军第88师士兵" },
+    { id: 3, name: "张华", role: "记者", description: "《新华日报》战地记者" },
+    { id: 4, name: "王二柱", role: "村长", description: "野场村村长，组织大生产" },
+    { id: 5, name: "王二柱", role: "抗战老兵", description: "见证胜利的抗战老兵" },
+    { id: 6, name: "王二柱", role: "胜利者", description: "抗战胜利的见证者" }
+];
+
+// 更新角色显示
+function updateCharacterDisplay(chapterIndex) {
+    if (chapterIndex < 0 || chapterIndex >= chapterCharacters.length) return;
+    
+    const character = chapterCharacters[chapterIndex];
+    gameState.currentCharacter = character.id;
+    
+    // 更新UI元素
+    const charNameEl = document.getElementById('character-name');
+    const charRoleEl = document.getElementById('character-role');
+    const chapterNameEl = document.getElementById('chapter-name');
+    
+    if (charNameEl) charNameEl.textContent = character.name;
+    if (charRoleEl) charRoleEl.textContent = character.role;
+    if (chapterNameEl && chapters[chapterIndex]) {
+        chapterNameEl.textContent = chapters[chapterIndex].name;
+    }
+    
+    console.log('角色切换:', character.name, '-', character.role);
+}
 
 // 完整剧情节点系统 - 大幅扩充版
 const storyNodes = {
@@ -1727,37 +1775,58 @@ function triggerEvent(event) {
 
 // 处理事件选择
 function handleEventChoice(choice) {
-    // 应用选择后果
-    applyConsequences(choice.consequences);
-    
-    // 更新游戏日志
-    addToLog(choice.text);
-    
-    // 移除活跃事件
-    gameState.activeEvents = gameState.activeEvents.filter(event => 
-        event.eventId !== storyNodes[gameState.currentNode].eventId
-    );
-    
-    // 更新事件历史
-    const eventHistoryItem = gameState.eventHistory.find(item => 
-        item.eventId === storyNodes[gameState.currentNode].eventId && item.status === "active"
-    );
-    if (eventHistoryItem) {
-        eventHistoryItem.status = "completed";
-        eventHistoryItem.completedAt = gameState.time;
+    try {
+        // 应用选择后果
+        if (choice.consequences) {
+            applyConsequences(choice.consequences);
+        }
+        
+        // 更新游戏日志
+        addToLog(choice.text);
+        
+        // 移除活跃事件
+        const currentNodeData = storyNodes[gameState.currentNode];
+        if (currentNodeData && currentNodeData.eventId) {
+            gameState.activeEvents = gameState.activeEvents.filter(event => 
+                event.eventId !== currentNodeData.eventId
+            );
+            
+            // 更新事件历史
+            const eventHistoryItem = gameState.eventHistory.find(item => 
+                item.eventId === currentNodeData.eventId && item.status === "active"
+            );
+            if (eventHistoryItem) {
+                eventHistoryItem.status = "completed";
+                eventHistoryItem.completedAt = gameState.time;
+            }
+        }
+        
+        // 推进到下一个节点（带回退机制）
+        if (choice.nextNode && storyNodes[choice.nextNode]) {
+            gameState.currentNode = choice.nextNode;
+        } else {
+            console.warn('Event nextNode not found:', choice.nextNode);
+            // 回退到章节开始
+            gameState.currentNode = `chapter${gameState.currentChapter}_start`;
+            if (!storyNodes[gameState.currentNode]) {
+                gameState.currentNode = 'chapter1_start';
+            }
+        }
+        
+        // 保存游戏状态
+        saveGameState();
+        
+        // 显示下一个节点
+        showCurrentNode();
+        
+        // 更新UI
+        updateUI();
+    } catch (error) {
+        console.error('handleEventChoice error:', error);
+        gameState.currentNode = 'chapter1_start';
+        showCurrentNode();
+        updateUI();
     }
-    
-    // 推进到下一个节点
-    gameState.currentNode = choice.nextNode;
-    
-    // 保存游戏状态
-    saveGameState();
-    
-    // 显示下一个节点
-    showCurrentNode();
-    
-    // 更新UI
-    updateUI();
 }
 
 // 每日事件更新
@@ -2007,42 +2076,68 @@ function gainRandomSupport() {
 
 // 处理支持选择
 function handleSupportChoice(choice) {
-    const support = supportTypes[choice.supportId];
-    if (!support) return;
-    
-    // 添加到活跃支持
-    gameState.activeSupports.push({
-        supportId: support.id,
-        startTime: gameState.time,
-        duration: support.duration,
-        remainingDuration: support.duration,
-        effects: support.effects,
-        name: support.name,
-        description: support.description
-    });
-    
-    // 添加到支持历史
-    gameState.supportHistory.push({
-        supportId: support.id,
-        gainedAt: gameState.time,
-        name: support.name,
-        category: support.category
-    });
-    
-    // 添加到游戏日志
-    addToLog(`获得支持：${support.name} - ${support.description}`);
-    
-    // 推进到下一个节点
-    gameState.currentNode = choice.nextNode;
-    
-    // 保存游戏状态
-    saveGameState();
-    
-    // 显示下一个节点
-    showCurrentNode();
-    
-    // 更新UI
-    updateUI();
+    try {
+        const support = supportTypes[choice.supportId];
+        if (!support) {
+            console.warn('Support not found:', choice.supportId);
+            // 直接跳转到下一个节点
+            if (choice.nextNode && storyNodes[choice.nextNode]) {
+                gameState.currentNode = choice.nextNode;
+            } else {
+                gameState.currentNode = `chapter${gameState.currentChapter}_start`;
+            }
+            showCurrentNode();
+            updateUI();
+            return;
+        }
+        
+        // 添加到活跃支持
+        gameState.activeSupports.push({
+            supportId: support.id,
+            startTime: gameState.time,
+            duration: support.duration,
+            remainingDuration: support.duration,
+            effects: support.effects,
+            name: support.name,
+            description: support.description
+        });
+        
+        // 添加到支持历史
+        gameState.supportHistory.push({
+            supportId: support.id,
+            gainedAt: gameState.time,
+            name: support.name,
+            category: support.category
+        });
+        
+        // 添加到游戏日志
+        addToLog(`获得支持：${support.name} - ${support.description}`);
+        
+        // 推进到下一个节点（带回退机制）
+        if (choice.nextNode && storyNodes[choice.nextNode]) {
+            gameState.currentNode = choice.nextNode;
+        } else {
+            console.warn('Support nextNode not found:', choice.nextNode);
+            gameState.currentNode = `chapter${gameState.currentChapter}_start`;
+            if (!storyNodes[gameState.currentNode]) {
+                gameState.currentNode = 'chapter1_start';
+            }
+        }
+        
+        // 保存游戏状态
+        saveGameState();
+        
+        // 显示下一个节点
+        showCurrentNode();
+        
+        // 更新UI
+        updateUI();
+    } catch (error) {
+        console.error('handleSupportChoice error:', error);
+        gameState.currentNode = 'chapter1_start';
+        showCurrentNode();
+        updateUI();
+    }
 }
 
 // 每日支持更新
@@ -2125,6 +2220,14 @@ function calculateCompletion() {
 function showCompletion() {
     const completion = calculateCompletion();
     
+    // 保存当前节点，用于返回（必须在修改currentNode之前保存）
+    const returnNode = gameState.currentNode;
+    
+    // 确保返回节点有效，如果当前节点是completion_view则不保存
+    const validReturnNode = (returnNode && returnNode !== "completion_view" && storyNodes[returnNode]) 
+        ? returnNode 
+        : (gameState.previousNode || "start");
+    
     const completionNode = {
         id: "completion_view",
         chapter: gameState.currentChapter,
@@ -2136,11 +2239,14 @@ function showCompletion() {
             {
                 text: "返回游戏",
                 consequences: {},
-                nextNode: gameState.currentNode
+                nextNode: validReturnNode
             }
         ],
         isCompletion: true
     };
+    
+    // 保存之前的节点（用于后续返回）
+    gameState.previousNode = validReturnNode;
     
     // 临时添加完成度节点到storyNodes
     storyNodes[completionNode.id] = completionNode;
@@ -2148,11 +2254,8 @@ function showCompletion() {
     // 切换到完成度节点
     gameState.currentNode = completionNode.id;
     
-    // 显示完成度
+    // 显示完成度（不保存游戏状态，避免覆盖正常进度）
     showCurrentNode();
-    
-    // 保存游戏状态
-    saveGameState();
 }
 
 // 重置游戏状态为初始状态
@@ -2160,6 +2263,7 @@ function resetGameState() {
     gameState.currentChapter = 0;
     gameState.currentCharacter = 0;
     gameState.currentNode = "start";
+    gameState.previousNode = null;
     gameState.time = 193707;
     gameState.chapterProgress = 0;
     gameState.resources = {
@@ -2195,38 +2299,31 @@ function resetGameState() {
 
 // 初始化游戏
 function initGame() {
-    console.log('initGame被调用');
-    
     // 合并所有故事节点
     if (typeof mergeAllStoryNodes === 'function') {
-        console.log('合并故事节点...');
         mergeAllStoryNodes();
-        console.log('故事节点数量:', Object.keys(storyNodes).length);
-    } else {
-        console.error('mergeAllStoryNodes函数不可用');
+    }
+    if (typeof mergeMissingNodes === 'function') {
+        mergeMissingNodes();
     }
     
-    // 尝试加载保存的状态，如果没有保存的状态，则重置为初始状态
-    const savedState = localStorage.getItem('antiR_gameState');
-    if (!savedState) {
-        console.log('没有保存的状态，重置游戏');
-        // 重置游戏状态为初始状态
-        resetGameState();
-    }
-    loadGameState();
+    // 始终重置为初始状态（避免加载损坏的存档）
+    resetGameState();
+    
+    // 确保currentNode是start
+    gameState.currentNode = 'start';
+    
+    // 更新UI
     updateUI();
     
-    // 只在第一次时绑定事件监听器
+    // 绑定事件监听器
     if (!gameState.eventListenersBound) {
         bindEventListeners();
         gameState.eventListenersBound = true;
-        console.log('事件监听器已绑定');
     }
     
+    // 显示开始节点
     showCurrentNode();
-    console.log('initGame完成');
-    console.log('当前节点:', gameState.currentNode);
-    console.log('当前节点文本:', storyNodes[gameState.currentNode]?.text?.substring(0, 50) + '...');
 }
 
 // 移除事件监听器（防止重复绑定）
@@ -2376,13 +2473,7 @@ ${performance}
 
 // 显示当前剧情节点
 function showCurrentNode() {
-    console.log('=== showCurrentNode开始 ===');
-    console.log('gameState.currentNode:', gameState.currentNode);
-    
     const node = storyNodes[gameState.currentNode];
-    
-    console.log('storyNodes数量:', Object.keys(storyNodes).length);
-    console.log('node:', node);
     
     if (!node) {
         console.error('节点不存在！显示胜利结局');
@@ -2395,10 +2486,13 @@ function showCurrentNode() {
         return;
     }
     
-    // 更新章节
+    // 更新章节和角色
     if (node.chapter >= 0 && node.chapter !== gameState.currentChapter) {
         gameState.currentChapter = node.chapter;
         addToLog(`进入${chapters[node.chapter].name}`);
+        
+        // 更新角色信息
+        updateCharacterDisplay(node.chapter);
     }
     
     // 更新剧情文本
@@ -2429,159 +2523,154 @@ function showCurrentNode() {
     }
     
     // 更新选择按钮
-    console.log('=== 更新选择按钮 ===');
-    const choicesContainer = document.getElementById('choices-container');
-    console.log('choicesContainer:', choicesContainer);
-    
+        const choicesContainer = document.getElementById('choices-container');
+        
     if (!choicesContainer) {
         console.error('choices-container元素不存在!');
         return;
     }
     
-    console.log('清空选项容器...');
-    choicesContainer.innerHTML = '';
+        choicesContainer.innerHTML = '';
     
-    console.log('当前节点:', gameState.currentNode);
-    console.log('节点对象:', node);
-    console.log('节点choices:', node.choices);
-    console.log('choices数量:', node.choices?.length);
-    
+                    
     if (node.choices && node.choices.length > 0) {
-        console.log('开始生成选项按钮...');
-        node.choices.forEach((choice, index) => {
-            console.log(`生成选项 ${index}: ${choice.text}`);
-            const button = document.createElement('button');
+                node.choices.forEach((choice, index) => {
+                        const button = document.createElement('button');
             button.className = 'choice-btn';
             button.textContent = choice.text;
             button.dataset.choice = index;
             // 不在这里绑定事件，使用全局事件委托
             choicesContainer.appendChild(button);
-            console.log(`选项 ${index} 已添加到DOM`);
-        });
-        console.log(`总共添加了 ${node.choices.length} 个选项`);
-    } else {
-        console.log('节点没有choices或choices为空，这是正常的结束节点');
-    }
+                    });
+            } else {
+            }
     
-    console.log('=== showCurrentNode完成 ===');
-}
+    }
 
 // 处理玩家选择
 function handleChoice(event) {
-    console.log('handleChoice被调用');
-    console.log('event.target:', event.target);
-    console.log('choiceIndex:', event.target.dataset.choice);
-    
-    const choiceIndex = parseInt(event.target.dataset.choice);
-    const currentNode = storyNodes[gameState.currentNode];
-    
-    console.log('currentNode:', gameState.currentNode);
-    console.log('currentNode存在:', !!currentNode);
-    console.log('choices存在:', !!currentNode?.choices);
-    
-    if (!currentNode) {
-        console.error('currentNode不存在!');
-        return;
+    try {
+        const choiceIndex = parseInt(event.target.dataset.choice);
+        if (isNaN(choiceIndex)) {
+            console.error('Invalid choice index');
+            return;
+        }
+        
+        const currentNode = storyNodes[gameState.currentNode];
+        
+        if (!currentNode) {
+            console.error('Node not found:', gameState.currentNode);
+            gameState.currentNode = gameState.previousNode || 'start';
+            showCurrentNode();
+            return;
+        }
+        
+        if (!currentNode.choices || !currentNode.choices[choiceIndex]) {
+            console.error('Choice not found:', choiceIndex);
+            return;
+        }
+        
+        const choice = currentNode.choices[choiceIndex];
+        
+        // 检查是否是特殊节点（完成度、日志等），这些不需要处理游戏逻辑
+        const isSpecialNode = currentNode.isCompletion || currentNode.isLog || currentNode.isSettings;
+        
+        if (!isSpecialNode) {
+            // 只对普通游戏节点记录访问
+            if (!gameState.visitedNodes.includes(gameState.currentNode)) {
+                gameState.visitedNodes.push(gameState.currentNode);
+            }
+            
+            // 记录选择
+            gameState.chosenOptions.push({
+                nodeId: gameState.currentNode,
+                choiceIndex: choiceIndex,
+                choiceText: choice.text,
+                time: gameState.time
+            });
+            
+            // 应用后果
+            if (choice.consequences) {
+                applyConsequences(choice.consequences);
+            }
+            
+            // 添加到日志
+            addToLog(choice.text);
+            
+            // 检查角色状态
+            try { checkCharacterStatus(); } catch (e) {}
+            
+            // 检查结局
+            const ending = checkEnding();
+            if (ending) {
+                showEnding(ending);
+                return;
+            }
+            
+            // 推进章节
+            gameState.chapterProgress++;
+            
+            // 推进时间
+            const timeAdvance = Math.floor(Math.random() * 3) + 1;
+            advanceTime(timeAdvance);
+            
+            // 可选功能
+            try { updateDailyEvents(); } catch (e) {}
+            try { updateDailySupports(); } catch (e) {}
+            try { checkRandomEvent("choice"); } catch (e) {}
+            try { checkAchievements(); } catch (e) {}
+            try { checkChapterTransition(); } catch (e) {}
+        }
+        
+        // 保存当前节点为previousNode（用于返回功能）
+        if (!isSpecialNode && gameState.currentNode !== 'completion_view') {
+            gameState.previousNode = gameState.currentNode;
+        }
+        
+        // 移动到下一个节点
+        let nextNode = choice.nextNode;
+        
+        // 验证nextNode有效性
+        if (nextNode && storyNodes[nextNode]) {
+            gameState.currentNode = nextNode;
+        } else if (nextNode) {
+            console.warn('Next node not found:', nextNode);
+            // 智能回退：基于章节选择合适的起始点
+            const chapterStarts = ['start', 'chapter1_start', 'chapter2_start', 'chapter3_start', 'chapter4_start', 'chapter5_start', 'chapter6_start'];
+            const fallback = chapterStarts[gameState.currentChapter] || 'start';
+            
+            if (storyNodes[fallback]) {
+                gameState.currentNode = fallback;
+            } else {
+                gameState.currentNode = 'start';
+            }
+        } else {
+            // nextNode为空，保持当前节点或回退
+            console.warn('No nextNode specified');
+            if (gameState.previousNode && storyNodes[gameState.previousNode]) {
+                gameState.currentNode = gameState.previousNode;
+            }
+        }
+        
+        // 只对普通节点保存游戏状态
+        if (!isSpecialNode) {
+            try { saveGameState(); } catch (e) {}
+        }
+        
+        showCurrentNode();
+        updateUI();
+        
+    } catch (error) {
+        console.error('handleChoice error:', error);
+        // 恢复到安全状态
+        if (gameState.previousNode && storyNodes[gameState.previousNode]) {
+            gameState.currentNode = gameState.previousNode;
+        } else {
+            gameState.currentNode = 'start';
+        }
+        showCurrentNode();
+        updateUI();
     }
-    
-    if (!currentNode.choices || !currentNode.choices[choiceIndex]) {
-        console.error('choice不存在! choiceIndex:', choiceIndex);
-        return;
-    }
-    
-    const choice = currentNode.choices[choiceIndex];
-    console.log('choice:', choice.text);
-    
-    // 记录访问的节点
-    if (!gameState.visitedNodes.includes(gameState.currentNode)) {
-        gameState.visitedNodes.push(gameState.currentNode);
-    }
-    
-    // 记录选择
-    gameState.chosenOptions.push({
-        nodeId: gameState.currentNode,
-        choiceIndex: choiceIndex,
-        choiceText: choice.text,
-        time: gameState.time
-    });
-    
-    console.log('准备应用后果...');
-    console.log('nextNode:', choice.nextNode);
-    
-    // 处理特殊节点类型
-    if (currentNode.isEvent) {
-        // 处理事件选择
-        handleEventChoice(choice);
-        return;
-    }
-    
-    if (currentNode.isSupportChoice) {
-        // 处理支持选择
-        handleSupportChoice(choice);
-        return;
-    }
-    
-    // 应用选择后果
-    applyConsequences(choice.consequences);
-    
-    // 更新游戏日志
-    addToLog(choice.text);
-    
-    // 检查角色状态
-    checkCharacterStatus();
-    
-    // 检查游戏结局
-    const ending = checkEnding();
-    if (ending) {
-        showEnding(ending);
-        return;
-    }
-    
-    // 推进章节进度
-    gameState.chapterProgress++;
-    
-    // 推进时间（每个选择推进1-3个月）
-    const timeAdvance = Math.floor(Math.random() * 3) + 1;
-    advanceTime(timeAdvance);
-    
-    // 更新每日事件和支持
-    updateDailyEvents();
-    updateDailySupports();
-    
-    // 检查随机事件
-    checkRandomEvent("choice");
-    
-    // 检查成就
-    checkAchievements();
-    
-    // 检查是否需要切换章节
-    checkChapterTransition();
-    
-    // 有20%概率获得随机支持（不要自动跳转，只是记录）
-    if (Math.random() < 0.2) {
-        console.log('触发随机支持');
-        gainRandomSupport();
-        // 不要在这里返回，继续执行
-    }
-    
-    // 推进到下一个节点
-    gameState.currentNode = choice.nextNode;
-    console.log('已设置当前节点为:', gameState.currentNode);
-    
-    // 保存游戏状态
-    console.log('保存游戏状态...');
-    saveGameState();
-    console.log('游戏状态已保存');
-    
-    // 显示下一个节点
-    console.log('显示当前节点...');
-    showCurrentNode();
-    console.log('当前节点已显示');
-    
-    // 更新UI
-    console.log('更新UI...');
-    updateUI();
-    console.log('UI更新完成');
 }
 
 // 应用选择后果
@@ -2708,7 +2797,7 @@ function checkChapterTransition() {
                 checkAchievements();
                 
                 // 有15%概率获得随机支持
-                if (Math.random() < 0.15) {
+                if (Math.random() < GAME_CONSTANTS.CHAPTER_SUPPORT_CHANCE) {
                     gainRandomSupport();
                 }
             }
@@ -2721,7 +2810,7 @@ function checkEnding() {
     const { time, characterStatus, resources } = gameState;
     
     // 抗战胜利
-    if (time >= 194508) {
+    if (time >= GAME_CONSTANTS.VICTORY_DATE) {
         return 'victory';
     }
     
@@ -2986,3 +3075,10 @@ window.handleChoice = handleChoice;
 window.saveGameState = saveGameState;
 window.loadGameState = loadGameState;
 window.unbindEventListeners = unbindEventListeners;
+window.showCurrentNode = showCurrentNode;
+window.updateUI = updateUI;
+window.bindEventListeners = bindEventListeners;
+
+
+
+
