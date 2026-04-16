@@ -27,7 +27,9 @@ const gameState = {
         intelligence: 0,
         reputation: 0,
         money: 500,
-        medicine: 0
+        medicine: 0,
+        peopleHeart: 50,
+        massBase: 0
     },
     characterStatus: {
         health: 100,
@@ -53,7 +55,19 @@ const gameState = {
     endings: [],
     // 多周目数据
     playthroughs: 1,
-    totalPlayTime: 0
+    totalPlayTime: 0,
+    // 群众路线追踪
+    tunnelLevel: 0,
+    militiaUnlocked: false,
+    assemblyCount: 0,
+    // 军事民主追踪
+    councilDecisions: [],
+    reviewBonuses: [],
+    tacticalBonus: 0,
+    // 敌后斗争追踪
+    guerrillaTactics: [],
+    sweepsSurvived: 0,
+    intelNetwork: []
 };
 
 // 角色数据
@@ -2884,7 +2898,9 @@ function restartGame() {
             intelligence: 0,
             reputation: 0,
             money: 500,
-            medicine: 0
+            medicine: 0,
+            peopleHeart: 50,
+            massBase: 0
         },
         characterStatus: {
             health: 100,
@@ -2894,7 +2910,16 @@ function restartGame() {
         flags: {},
         relationships: {},
         log: ["1937年7月7日，卢沟桥事变爆发"],
-        hiddenClues: []
+        hiddenClues: [],
+        tunnelLevel: 0,
+        militiaUnlocked: false,
+        assemblyCount: 0,
+        councilDecisions: [],
+        reviewBonuses: [],
+        tacticalBonus: 0,
+        guerrillaTactics: [],
+        sweepsSurvived: 0,
+        intelNetwork: []
     });
     
     const gameOver = document.getElementById('game-over');
